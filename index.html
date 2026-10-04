@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sentryl — AI Email Forensics for Microsoft Edge</title>
+  <meta name="description" content="Sentryl investigates suspicious Gmail and Outlook emails by exposing hidden forensic signals—isolating lookalike domains, deceptive links and authentication anomalies.">
+  <meta property="og:title" content="Sentryl — Every Email Hides Evidence">
+  <meta property="og:description" content="AI email forensics for Microsoft Edge. See beneath the email.">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts: Inter Tight (Display 600), Inter (Body 400/500), JetBrains Mono (Labels) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body class="sentryl-body">
+
+  <!-- =================================================================
+       CINEMATIC INTRO (4.0s Quiet, Cinematic Scan Sequence)
+       ================================================================= -->
+  <div id="cinematic-intro" class="cinematic-intro" role="dialog" aria-modal="true" aria-label="Sentryl introduction">
+    <!-- Top-left Sentryl wordmark positioned identically to top-nav logo -->
+    <div class="intro-top-bar" aria-hidden="true">
+      <div class="intro-nav-container">
+        <span class="intro-brand-mark">Sentryl</span>
+      </div>
+    </div>
+
+    <!-- Center Stage (Upper-center email, Lower-center status messages) -->
+    <div class="intro-center-stage" id="intro-center-stage">
+      <!-- Suspicious MailClient specimen with soft glow wrapper -->
+      <div class="intro-email-wrapper" id="intro-email-wrapper">
+        <div class="intro-glow-cyan" id="intro-glow-cyan" aria-hidden="true"></div>
+        <div class="intro-glow-red" id="intro-glow-red" aria-hidden="true"></div>
+        <div class="mail-client mail-client--intro" id="intro-mail-client" data-variant="suspicious">
+          <div class="mc-main-pane mc-main-pane--intro">
+            <div class="mc-subject-row">
+              <h2 class="mc-subject-text">Offer of Employment — Northwind Platforms Inc.</h2>
+              <span class="mc-inbox-chip">Inbox ×</span>
+            </div>
+
+            <div class="mc-sender-row">
+              <div class="mc-sender-avatar">DR</div>
+              <div class="mc-sender-details">
+                <div class="mc-sender-line">
+                  <span class="mc-sender-name">Daniel Reeves</span>
+                  <svg class="mc-verified-tick" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <div class="mc-address-line" id="intro-sender-address">
+                  <span>&lt;daniel.reeves@<strong class="domain-spoofed" id="intro-domain-spoofed">northwind-careers.example</strong>&gt;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mc-body-content">
+              <p>Hi Alex,</p>
+              <p>We are pleased to offer you the position of Software Developer Intern at Northwind Platforms Inc. The engineering team was deeply impressed with your technical interview.</p>
+              <p class="mc-urgent-line">Please review and confirm your acceptance within 24 hours to secure your placement.</p>
+              <p class="mc-link-line">
+                Confirm your placement online:
+                <a href="#0" class="mc-text-link" id="intro-email-link">https://northwind.example/offers/confirm</a>
+              </p>
+            </div>
+
+            <!-- Attachment Chip -->
+            <div class="mc-attachment-chip" id="intro-email-att">
+              <div class="mc-pdf-icon">PDF</div>
+              <div class="mc-att-info">
+                <span class="mc-att-name">Offer_Letter.pdf</span>
+                <span class="mc-att-size">312 KB</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thin 2px cyan scan line & soft tint -->
+          <div class="intro-scan-beam" id="intro-scan-beam"></div>
+          <div class="intro-scan-tint" id="intro-scan-tint"></div>
+        </div>
+      </div>
+
+      <!-- Lower-center message sequence & final verdict -->
+      <div class="intro-status-stage" id="intro-status-stage" aria-live="polite">
+        <div class="intro-messages-track" id="intro-messages-track"></div>
+        <div class="intro-verdict-msg" id="intro-verdict-msg">Suspicious email</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =================================================================
+       MAIN EDITORIAL WEBSITE
+       ================================================================= -->
+  <div class="site-wrapper" id="site-wrapper">
+
+    <!-- ── TOP NAVIGATION ── -->
+    <header class="top-nav" id="top-nav" role="banner">
+      <div class="nav-container">
+        <!-- Logo click replays intro -->
+        <button class="brand-wordmark" id="brand-replay-btn" type="button" aria-label="Replay intro">
+          Sentryl
+        </button>
+
+        <!-- Three-Dot Button -->
+        <button class="three-dots-btn" id="three-dots-btn" type="button" aria-expanded="false" aria-controls="side-drawer" aria-label="Open menu">
+          <div class="dots-wrapper" id="dots-wrapper">
+            <span class="dot dot-1"></span>
+            <span class="dot dot-2"></span>
+            <span class="dot dot-3"></span>
+          </div>
+        </button>
+      </div>
+    </header>
+
+
+    <!-- ── RIGHT-SIDE MENU DRAWER ── -->
+    <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+
+    <aside class="side-drawer" id="side-drawer" aria-hidden="true" role="dialog" aria-label="Navigation drawer">
+      <div class="drawer-inner">
+        <div class="drawer-header">
+          <span class="drawer-label">MENU</span>
+          <button class="drawer-close-btn" id="drawer-close-btn" type="button" aria-label="Close menu">
+            <span class="close-x">✕</span>
+          </button>
+        </div>
+
+        <nav class="drawer-nav" aria-label="Drawer navigation">
+          <ul class="drawer-links" role="list">
+            <li class="drawer-item" style="--i: 1">
+              <a href="#how-it-works" class="drawer-link" data-close-drawer>
+                <span class="d-num">01</span>
+                <span class="d-title">How it works</span>
+              </a>
+            </li>
+            <li class="drawer-item" style="--i: 2">
+              <button class="drawer-link drawer-modal-trigger" data-modal="terms" type="button">
+                <span class="d-num">02</span>
+                <span class="d-title">Terms &amp; Conditions</span>
+              </button>
+            </li>
+            <li class="drawer-item" style="--i: 3">
+              <a href="#faq" class="drawer-link" data-close-drawer>
+                <span class="d-num">03</span>
+                <span class="d-title">FAQs</span>
+              </a>
+            </li>
+            <li class="drawer-item drawer-item--cta" style="--i: 4">
+              <a href="https://microsoftedge.microsoft.com" target="_blank" rel="noopener noreferrer" class="drawer-cta-link">
+                <span class="d-num">04</span>
+                <span class="d-title">Download extension <span class="d-arrow">→</span></span>
+                <span class="drawer-cta-line"></span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="drawer-footer">
+          <div class="drawer-footer-row">
+            <span class="df-lbl">BROWSER EXTENSION</span>
+            <span class="df-val">Microsoft Edge</span>
+          </div>
+          <div class="drawer-footer-row">
+            <span class="df-lbl">CONTACT</span>
+            <a href="mailto:sentrylsupport@gmail.com" class="df-link">sentrylsupport@gmail.com</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+
+    <!-- ── HERO SECTION ── -->
+    <section class="hero-section" id="hero" aria-label="Hero">
+      <div class="hero-backdrop-subtle" aria-hidden="true"></div>
+
+      <div class="hero-content-wrap">
+        <div class="hero-eyebrow-wrap">
+          <p class="hero-eyebrow">
+            AI email forensics · Microsoft Edge
+          </p>
+        </div>
+
+        <h1 class="hero-headline" aria-label="Every email hides evidence.">
+          <span class="hero-line-mask"><span class="hero-line">Every email hides evidence.</span></span>
+        </h1>
+
+        <div class="hero-visual-stage" id="hero-visual-stage">
+          <div class="mail-client-outer">
+            <!-- Suspicious variant in Hero -->
+            <div class="mail-client mail-client--hero" id="hero-mail-client" data-variant="suspicious">
+              <div class="mc-topbar">
+                <div class="mc-topbar-left">
+                  <span class="mc-icon-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                  </span>
+                  <div class="mc-brand-mark">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <span>Mail</span>
+                  </div>
+                </div>
+                <div class="mc-search-bar">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <span>Search mail</span>
+                </div>
+                <div class="mc-topbar-right">
+                  <span class="mc-top-avatar">A</span>
+                </div>
+              </div>
+
+              <div class="mc-layout">
+                <aside class="mc-sidebar" aria-hidden="true">
+                  <div class="mc-compose-btn"><span>Compose</span></div>
+                  <ul class="mc-nav-list">
+                    <li class="mc-nav-item active"><span class="mc-nav-label">Inbox</span><span class="mc-badge">1</span></li>
+                    <li class="mc-nav-item"><span class="mc-nav-label">Starred</span></li>
+                    <li class="mc-nav-item"><span class="mc-nav-label">Sent</span></li>
+                    <li class="mc-nav-item"><span class="mc-nav-label">Drafts</span><span class="mc-badge">3</span></li>
+                  </ul>
+                </aside>
+
+                <main class="mc-main-pane">
+                  <div class="mc-subject-row">
+                    <h2 class="mc-subject-text">Offer of Employment — Northwind Platforms Inc.</h2>
+                    <span class="mc-inbox-chip">Inbox ×</span>
+                  </div>
+
+                  <div class="mc-sender-row">
+                    <div class="mc-sender-avatar">DR</div>
+                    <div class="mc-sender-details">
+                      <div class="mc-sender-line">
+                        <span class="mc-sender-name">Daniel Reeves</span>
+                        <svg class="mc-verified-tick" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                      <div class="mc-address-line">
+                        <span>&lt;daniel.reeves@<strong class="domain-spoofed">northwind-careers.example</strong>&gt;</span>
+                        <span class="mc-to-me">to me ▾</span>
+                      </div>
+                    </div>
+                    <div class="mc-sender-right">
+                      <span class="mc-time">Sep 28, 2026, 10:47 AM</span>
+                    </div>
+                  </div>
+
+                  <div class="mc-body-content">
+                    <p>Hi Alex,</p>
+                    <p><strong>Congratulations!</strong> We are pleased to offer you the position of Software Developer Intern at Northwind Platforms Inc.</p>
+                    <p>Your start date is October 15, 2026. The detailed offer letter outlining compensation, mentorship tracks, and equipment onboarding is attached below.</p>
+                    <p class="mc-urgent-line">Please review and confirm within 24 hours to secure your placement.</p>
+                  </div>
+
+                  <div class="mc-attachment-chip">
+                    <div class="mc-pdf-icon">PDF</div>
+                    <div class="mc-att-info">
+                      <span class="mc-att-name">Offer_Letter.pdf</span>
+                      <span class="mc-att-size">312 KB</span>
+                    </div>
+                  </div>
+                </main>
+              </div>
+            </div>
+            <!-- Tasteful demonstration note outside frame -->
+            <div class="demo-caption">Demonstration email</div>
+          </div>
+        </div>
+
+        <div class="hero-bottom-bar">
+          <div class="hero-copy-left">
+            <p class="hero-editorial-copy">
+              Sentryl investigates suspicious Gmail and Outlook emails by exposing hidden forensic signals—isolating lookalike domains, deceptive links and authentication anomalies before you trust what you are reading.
+            </p>
+          </div>
+
+          <div class="hero-cta-right">
+            <a href="https://microsoftedge.microsoft.com" target="_blank" rel="noopener noreferrer" class="hero-primary-btn">
+              <span>Download extension</span>
+              <span class="btn-arrow">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── "LOOK CLOSER" STATEMENT ── -->
+    <section class="look-closer-section" id="look-closer" aria-label="Look Closer">
+      <div class="look-closer-inner">
+        <p class="lc-sub-eyebrow">THE MESSAGE IS ONLY THE SURFACE</p>
+        <h2 class="lc-heading">Look closer.</h2>
+        <div class="lc-divider-line"></div>
+      </div>
+    </section>
+
+
+    <!-- ── COMPARISON: LOOKS THE SAME. / IT ISN'T. ── -->
+    <section class="comparison-section" id="comparison" aria-label="Email Comparison">
+      <div class="section-container">
+
+        <div class="cmp-story-header">
+          <span class="sec-label">INVESTIGATION</span>
+          <h2 class="cmp-story-heading">
+            <span class="cmp-title-same">Looks the same.</span>
+            <span class="cmp-title-isnt" id="cmp-title-isnt">It isn't.</span>
+          </h2>
+          <p class="cmp-story-sub">
+            Phishing today doesn't look broken. It looks legitimate, official, and authentic. Sentryl reveals the difference before you click.
+          </p>
+        </div>
+
+        <!-- Split-Screen Pair -->
+        <div class="cmp-stage" id="cmp-stage">
+
+          <!-- LEFT: LEGITIMATE -->
+          <div class="cmp-col cmp-col--legit">
+            <div class="cmp-col-header">
+              <span class="cmp-badge-legit">Legitimate email</span>
+              <span class="cmp-domain-indicator">northwind.example</span>
+            </div>
+
+            <div class="mail-client mail-client--cmp" data-variant="legitimate">
+              <div class="mc-layout">
+                <main class="mc-main-pane">
+                  <div class="mc-subject-row">
+                    <h3 class="mc-subject-text">Offer of Employment — Northwind Platforms Inc.</h3>
+                  </div>
+
+                  <div class="mc-sender-row">
+                    <div class="mc-sender-avatar">DR</div>
+                    <div class="mc-sender-details">
+                      <div class="mc-sender-line">
+                        <span class="mc-sender-name">Daniel Reeves</span>
+                        <svg class="mc-verified-tick" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                      <div class="mc-address-line">
+                        <span>&lt;daniel.reeves@<strong>northwind.example</strong>&gt;</span>
+                      </div>
+                    </div>
+                    <div class="mc-sender-right">
+                      <span class="mc-time">10:42 AM</span>
+                    </div>
+                  </div>
+
+                  <div class="mc-body-content">
+                    <p>Hi Alex,</p>
+                    <p>Congratulations! We are pleased to offer you the position of Software Developer Intern at Northwind Platforms Inc.</p>
+                    <p>Your start date will be October 15, 2026. The detailed offer letter is attached to this email.</p>
+                    <p class="mc-signoff">
+                      Best regards,<br>
+                      <strong>Daniel Reeves</strong>, CEO, Northwind Platforms Inc.
+                    </p>
+                  </div>
+
+                  <div class="mc-attachment-chip">
+                    <div class="mc-pdf-icon">PDF</div>
+                    <div class="mc-att-info">
+                      <span class="mc-att-name">Offer_Letter.pdf</span>
+                      <span class="mc-att-size">312 KB</span>
+                    </div>
+                  </div>
+
+                  <div class="cmp-legit-status">
+                    <span class="status-dot-safe"></span>
+                    <span>Domain aligns with corporate DNS &amp; DMARC policy</span>
+                  </div>
+                </main>
+              </div>
+            </div>
+            <div class="demo-caption">Demonstration email</div>
+          </div>
+
+          <!-- RIGHT: SUSPICIOUS -->
+          <div class="cmp-col cmp-col--suspicious" id="cmp-col-suspicious">
+            <div class="cmp-col-header">
+              <span class="cmp-badge-threat">Suspicious email</span>
+              <span class="cmp-domain-indicator threat">northwind-careers.example</span>
+            </div>
+
+            <div class="mail-client mail-client--cmp suspicious-card-active" data-variant="suspicious">
+              <div class="mc-layout">
+                <main class="mc-main-pane">
+                  <div class="mc-subject-row">
+                    <h3 class="mc-subject-text">Offer of Employment — Northwind Platforms Inc.</h3>
+                  </div>
+
+                  <div class="mc-sender-row">
+                    <div class="mc-sender-avatar">DR</div>
+                    <div class="mc-sender-details">
+                      <div class="mc-sender-line">
+                        <span class="mc-sender-name">Daniel Reeves</span>
+                        <svg class="mc-verified-tick" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                      <div class="mc-address-line flagged-domain-line">
+                        <span>&lt;daniel.reeves@<strong class="domain-spoofed">northwind-careers.example</strong>&gt;</span>
+                      </div>
+                    </div>
+                    <div class="mc-sender-right">
+                      <span class="mc-time">10:47 AM</span>
+                    </div>
+                  </div>
+
+                  <div class="mc-body-content">
+                    <p>Hi Alex,</p>
+                    <p>Congratulations! We are pleased to offer you the position of Software Developer Intern at Northwind Platforms Inc.</p>
+                    <p>Your start date will be October 15, 2026. The detailed offer letter is attached to this email.</p>
+                    <p class="mc-urgent-line">Please confirm within 24 hours to secure your placement.</p>
+                    <p class="mc-link-line">
+                      Review offer details:
+                      <span class="flagged-link">northwind.example/offers/confirm</span>
+                    </p>
+                    <p class="mc-signoff">
+                      Best regards,<br>
+                      <strong>Daniel Reeves</strong>, CEO, Northwind Platforms Inc.
+                    </p>
+                  </div>
+
+                  <div class="mc-attachment-chip flagged-att">
+                    <div class="mc-pdf-icon">PDF</div>
+                    <div class="mc-att-info">
+                      <span class="mc-att-name">Offer_Letter.pdf</span>
+                      <span class="mc-att-size">312 KB</span>
+                    </div>
+                  </div>
+
+                  <!-- Evidence discovery callouts -->
+                  <div class="cmp-evidence-panel">
+                    <div class="ev-item" id="ev-domain">
+                      <span class="ev-tag">LOOKALIKE DOMAIN</span>
+                      <span class="ev-desc"><code>northwind-careers.example</code> differs from authenticated domain <code>northwind.example</code></span>
+                    </div>
+                    <div class="ev-item" id="ev-link">
+                      <span class="ev-tag">DESTINATION MISMATCH</span>
+                      <span class="ev-desc">Displayed link masks unverified redirect destination</span>
+                    </div>
+                    <div class="ev-item" id="ev-auth">
+                      <span class="ev-tag">AUTHENTICATION</span>
+                      <span class="ev-desc">DMARC alignment check failed for envelope sender</span>
+                    </div>
+                  </div>
+                </main>
+              </div>
+            </div>
+            <div class="demo-caption">Demonstration email</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ── EVIDENCE DECONSTRUCTION ── -->
+    <section class="deconstruction-section" id="evidence" aria-label="Evidence Deconstruction">
+      <div class="section-container">
+        <div class="decon-header">
+          <span class="sec-label">DECONSTRUCTION</span>
+          <h2 class="sec-title">Evidence beneath the surface.</h2>
+          <p class="sec-desc">
+            Sentryl inspects underlying technical signals independently, isolating anomalies before they can mislead you:
+          </p>
+        </div>
+
+        <div class="decon-cards-list">
+          <div class="decon-card">
+            <span class="dc-num">01</span>
+            <div class="dc-content">
+              <h3 class="dc-title">Sender &amp; Domain Consistency</h3>
+              <p class="dc-desc">Compares the visible display name against the authenticated sending domain and flags lookalike variations.</p>
+            </div>
+            <span class="dc-badge">Domain check</span>
+          </div>
+
+          <div class="decon-card">
+            <span class="dc-num">02</span>
+            <div class="dc-content">
+              <h3 class="dc-title">Link Destination Resolution</h3>
+              <p class="dc-desc">Unmasks underlying hyperlinks and redirect paths to reveal the genuine destination server.</p>
+            </div>
+            <span class="dc-badge">URL unmask</span>
+          </div>
+
+          <div class="decon-card">
+            <span class="dc-num">03</span>
+            <div class="dc-content">
+              <h3 class="dc-title">Header Authentication Records</h3>
+              <p class="dc-desc">Verifies SPF policy authorization, DKIM cryptographic signatures, and DMARC alignment records.</p>
+            </div>
+            <span class="dc-badge">DMARC / SPF</span>
+          </div>
+
+          <div class="decon-card">
+            <span class="dc-num">04</span>
+            <div class="dc-content">
+              <h3 class="dc-title">Routing &amp; Attachment Signals</h3>
+              <p class="dc-desc">Examines transmission hops in message headers and evaluates embedded file payloads for risk indicators.</p>
+            </div>
+            <span class="dc-badge">Hop verification</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── SIGNATURE EDITORIAL SECTION ── -->
+    <section class="signature-section" id="signature" aria-label="Core Philosophy">
+      <div class="sig-bg-canvas" aria-hidden="true">
+        <div class="sig-laser-line line-a"></div>
+        <div class="sig-laser-line line-b"></div>
+      </div>
+
+      <div class="sig-content">
+        <h2 class="sig-statement" id="sig-statement" aria-label="What looks normal can still hide evidence.">
+          <span class="sig-word">What</span>
+          <span class="sig-word">looks</span>
+          <span class="sig-word">normal</span>
+          <br class="sig-break">
+          <span class="sig-word">can</span>
+          <span class="sig-word">still</span>
+          <span class="sig-word">hide</span>
+          <span class="sig-word highlight-accent">evidence.</span>
+        </h2>
+
+        <p class="sig-subcopy">
+          Sentryl looks beneath the pixel layer of incoming emails to reveal what is happening under the surface.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ── VERDICT SECTION ── -->
+    <section class="verdict-section" id="verdict" aria-label="Verdict">
+      <div class="verdict-container">
+        <span class="verdict-top-eyebrow">INVESTIGATION RESULT</span>
+        <h2 class="verdict-big-title">Suspicious email</h2>
+        <p class="verdict-sub-explanation">The following indicators were uncovered during inspection:</p>
+
+        <div class="verdict-evidence-strip">
+          <div class="ve-chip"><span class="ve-dot"></span>Lookalike domain</div>
+          <div class="ve-chip"><span class="ve-dot"></span>Link destination mismatch</div>
+          <div class="ve-chip"><span class="ve-dot"></span>Authentication issue</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="hiw-section" id="how-it-works" aria-label="How it works">
+      <div class="section-container">
+        <div class="hiw-header">
+          <span class="sec-label">WORKFLOW</span>
+          <h2 class="sec-title">From inbox to verdict in seconds.</h2>
+        </div>
+
+        <div class="hiw-steps-list">
+          <div class="hiw-step-row">
+            <div class="hiw-num-col">01</div>
+            <div class="hiw-title-col">
+              <h3 class="hiw-step-title">Install</h3>
+            </div>
+            <div class="hiw-desc-col">
+              <p>Add Sentryl to Microsoft Edge from the extension store. It integrates directly into Gmail and Outlook without configuration.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step-row">
+            <div class="hiw-num-col">02</div>
+            <div class="hiw-title-col">
+              <h3 class="hiw-step-title">Open an email</h3>
+            </div>
+            <div class="hiw-desc-col">
+              <p>Open any email you wish to inspect. Sentryl activates seamlessly within your webmail session.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step-row">
+            <div class="hiw-num-col">03</div>
+            <div class="hiw-title-col">
+              <h3 class="hiw-step-title">Sentryl analyzes</h3>
+            </div>
+            <div class="hiw-desc-col">
+              <p>Visible text, sender addresses, destination links, and authentication records are cross-examined for inconsistencies.</p>
+            </div>
+          </div>
+
+          <div class="hiw-step-row">
+            <div class="hiw-num-col">04</div>
+            <div class="hiw-title-col">
+              <h3 class="hiw-step-title">Review the evidence</h3>
+            </div>
+            <div class="hiw-desc-col">
+              <p>Understand exactly which signals raised concern so you can make an informed decision before clicking or replying.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── FAQ ACCORDION ── -->
+    <section class="faq-section" id="faq" aria-label="Frequently Asked Questions">
+      <div class="section-container">
+        <div class="faq-header">
+          <span class="sec-label">QUESTIONS</span>
+          <h2 class="sec-title">Frequently asked.</h2>
+        </div>
+
+        <div class="faq-accordion-list">
+          <div class="faq-accordion-item">
+            <button class="faq-q-btn" type="button" aria-expanded="false">
+              <span class="faq-q-text">Is Sentryl only for suspicious emails?</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-a-panel" hidden>
+              <p class="faq-a-text">
+                Sentryl is designed to help investigate emails that may contain suspicious links, sender inconsistencies, impersonation signals, or other indicators that deserve closer inspection.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-accordion-item">
+            <button class="faq-q-btn" type="button" aria-expanded="false">
+              <span class="faq-q-text">How does Sentryl detect lookalike domains?</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-a-panel" hidden>
+              <p class="faq-a-text">
+                Sentryl extracts sender domains and inspects them for visual substitution tricks (such as digit-for-letter swaps like "1" for "l"), homoglyphs, and subtle differences compared to known organizational domains.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-accordion-item">
+            <button class="faq-q-btn" type="button" aria-expanded="false">
+              <span class="faq-q-text">Does Sentryl work with both Gmail and Outlook?</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-a-panel" hidden>
+              <p class="faq-a-text">
+                Yes. Sentryl works with Gmail and Microsoft Outlook on the web in Microsoft Edge, inspecting email headers and links without modifying your messages.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-accordion-item">
+            <button class="faq-q-btn" type="button" aria-expanded="false">
+              <span class="faq-q-text">What do SPF, DKIM, and DMARC failures mean?</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-a-panel" hidden>
+              <p class="faq-a-text">
+                These are email authentication standards that verify whether an email genuinely originated from the domain it claims. When authentication fails on an email claiming to be from an official organization, it often signals spoofing.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-accordion-item">
+            <button class="faq-q-btn" type="button" aria-expanded="false">
+              <span class="faq-q-text">Will Sentryl slow down my browser?</span>
+              <span class="faq-icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-a-panel" hidden>
+              <p class="faq-a-text">
+                No. Sentryl operates lightly when you open an email in supported webmail clients. It uses minimal memory and runs analysis quickly in the background.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── PRIVACY ── -->
+    <section class="privacy-section" id="privacy" aria-label="Privacy">
+      <div class="section-container">
+        <div class="priv-header">
+          <span class="sec-label">PRIVACY</span>
+          <h2 class="priv-heading">Your email.<br>Your control.</h2>
+          <p class="priv-subtext">
+            Sentryl inspects technical signals directly in your browser. We focus on exposing threat indicators, not collecting personal correspondence.
+          </p>
+        </div>
+
+        <div class="priv-grid">
+          <div class="priv-box">
+            <div class="pb-tag safe-tag">WHAT SENTRYL ANALYZES</div>
+            <ul class="pb-list">
+              <li>Header routing and sender domain consistency</li>
+              <li>Hyperlinks and unmasked destination redirect URLs</li>
+              <li>SPF, DKIM, and DMARC authentication records</li>
+              <li>Visible display names compared to envelope addresses</li>
+            </ul>
+          </div>
+
+          <div class="priv-box">
+            <div class="pb-tag threat-tag">WHAT WE DO NOT HARVEST</div>
+            <ul class="pb-list">
+              <li>Your personal credentials or login passwords</li>
+              <li>Personal email message history or private threads</li>
+              <li>Address books, contacts, or organizational charts</li>
+              <li>Confidential file attachments or personal downloads</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── FINAL CTA ── -->
+    <section class="final-cta-section" id="download" aria-label="Download Extension">
+      <div class="final-cta-bg-glow" aria-hidden="true"></div>
+
+      <div class="final-cta-content">
+        <h2 class="final-title">
+          <span>See what's</span>
+          <span>inside your</span>
+          <span class="glow-text">next email.</span>
+        </h2>
+
+        <p class="final-cta-sub">
+          Investigate suspicious messages in Microsoft Edge before you trust what you are reading.
+        </p>
+
+        <div class="final-cta-btn-wrap">
+          <a href="https://microsoftedge.microsoft.com" target="_blank" rel="noopener noreferrer" class="final-primary-btn">
+            <span>Download extension</span>
+            <span class="btn-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── MINIMAL FOOTER ── -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-container">
+        <div class="footer-col brand-col">
+          <span class="footer-logo">Sentryl</span>
+          <p class="footer-sub">AI email forensics<br>for Microsoft Edge</p>
+        </div>
+
+        <div class="footer-col contact-col">
+          <span class="footer-label">SUPPORT</span>
+          <a href="mailto:sentrylsupport@gmail.com" class="footer-email">sentrylsupport@gmail.com</a>
+        </div>
+
+        <div class="footer-col links-col">
+          <span class="footer-label">INDEX</span>
+          <div class="footer-nav-list">
+            <button class="footer-link-btn" data-modal="privacy" type="button">Privacy</button>
+            <button class="footer-link-btn" data-modal="terms" type="button">Terms</button>
+            <a href="#faq" class="footer-link-btn">FAQ</a>
+          </div>
+        </div>
+
+        <div class="footer-col copy-col">
+          <span class="footer-copy">© 2026 Sentryl</span>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /site-wrapper -->
+
+
+  <!-- ── MODALS (TERMS & PRIVACY) ── -->
+  <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true">
+    <div class="editorial-modal" id="modal-terms" role="dialog" aria-modal="true" aria-label="Terms and Conditions" hidden>
+      <div class="modal-header">
+        <h3 class="modal-title">Terms &amp; Conditions</h3>
+        <button class="modal-close" data-close-modal type="button" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-scroll-content">
+        <p class="modal-p"><strong>1. Usage:</strong> Sentryl is an informational browser extension designed to inspect email headers, domains, and links to assist user judgment.</p>
+        <p class="modal-p"><strong>2. User Discretion:</strong> While Sentryl assists in identifying anomalies, users remain responsible for inspecting their incoming messages.</p>
+        <p class="modal-p"><strong>3. Contact:</strong> Questions regarding these terms may be directed to <code>sentrylsupport@gmail.com</code>.</p>
+      </div>
+    </div>
+
+    <div class="editorial-modal" id="modal-privacy" role="dialog" aria-modal="true" aria-label="Privacy Policy" hidden>
+      <div class="modal-header">
+        <h3 class="modal-title">Privacy Policy</h3>
+        <button class="modal-close" data-close-modal type="button" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-scroll-content">
+        <p class="modal-p"><strong>Browser-Based Inspection:</strong> Sentryl evaluates email metadata directly in your browser session to protect against phishing and lookalike domains.</p>
+        <p class="modal-p"><strong>No Personal Message Collection:</strong> Sentryl does not collect or monetize your personal emails or message conversations.</p>
+        <p class="modal-p">For privacy inquiries, contact <code>sentrylsupport@gmail.com</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
